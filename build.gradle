@@ -8,11 +8,14 @@ version = '1.0-SNAPSHOT'
 repositories {
     mavenLocal()
     mavenCentral()
+//    maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
+
 }
 
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     implementation 'org.example:aliexcrawler:1.0-SNAPSHOT'
+//    implementation('it.skrape:skrapeit:1.2.1')
 }
 
 test {
