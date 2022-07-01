@@ -51,7 +51,21 @@ fun main(args: Array<String>) {
     var response = client.send(request, HttpResponse.BodyHandlers.ofString());
     println(response.body())
 
+    val docCtx = JsonPath.parse(response.body())
+    val itemId: Int = docCtx.read("$.item.item_id")
+    println("item_id: $itemId")
 
+    val requestParams = mapOf(
+        "item_id" to itemId,
+        "category_id" to category.reverseCategory[parser.productType]
+    ).map{(k,v) -> "$k=$v"}.joinToString("&")
+    request = HttpRequest.newBuilder()
+        .uri(URI.create("https://api.thebase.in/1/item_categories/add?${requestParams}"))
+        .POST(HttpRequest.BodyPublishers.noBody())
+        .header("Authorization", "Bearer $accessToken")
+        .build()
+    response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    println(response.body())
 
 }
 

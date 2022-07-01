@@ -1,3 +1,4 @@
+import model.Category
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
@@ -11,6 +12,9 @@ class Parser(val productId: String) {
     val mainImg = arrayListOf<String>()
     var videoUrl = ""
     var productVariants = arrayListOf<String>()
+    var productTitle = ""
+    var productPrice = ""
+    var productType = Category.Type.IPHONE
 
     private val baseUrl = "/Users/stronglong/home/business/techtoy/"
 
@@ -56,16 +60,18 @@ class Parser(val productId: String) {
 
         val dataTxtUrl = "${baseUrl}${productId}/data.txt"
         var countLine = 1
-        var productIdentifier: String
-        var productTitle: String
-        var productPrice: String
         File(dataTxtUrl).forEachLine {
             when (countLine) {
-                1 -> productIdentifier = it
-                2 -> productTitle = it
-                3 -> productPrice = it
+                1 -> productTitle = it
+                2 -> productPrice = it
                 else -> {
                     productVariants.add(it.replace("For iphone", "iPhone"))
+                    if (it.contains("airpods pro", ignoreCase = true) ||
+                            it.contains("airpods 3", ignoreCase = true)) {
+                        productType = Category.Type.AIRPODS_PRO
+                    } else if (it.contains("airpods", ignoreCase = true)) {
+                        productType = Category.Type.AIRPODS
+                    }
                 }
             }
             countLine++

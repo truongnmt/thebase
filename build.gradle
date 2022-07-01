@@ -15,6 +15,7 @@ repositories {
 dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
     implementation 'org.example:aliexcrawler:1.0-SNAPSHOT'
+    implementation 'com.jayway.jsonpath:json-path:2.7.0'
 //    implementation('it.skrape:skrapeit:1.2.1')
 }
 
