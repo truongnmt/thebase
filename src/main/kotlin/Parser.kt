@@ -62,7 +62,7 @@ class Parser(val productId: String) {
         var countLine = 1
         File(dataTxtUrl).forEachLine {
             when (countLine) {
-                1 -> productTitle = it
+                1 -> productTitle = "$productId $it"
                 2 -> productPrice = it
                 else -> {
                     productVariants.add(it.replace("For iphone", "iPhone"))
