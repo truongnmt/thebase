@@ -1,4 +1,5 @@
 import com.jayway.jsonpath.JsonPath
+import io.github.cdimascio.dotenv.Dotenv
 import model.Category
 import java.net.URI
 import java.net.URLEncoder
@@ -10,8 +11,10 @@ fun main(args: Array<String>) {
 //    var aliexCrawler = AliexCrawler("4001328236329")
 //    aliexCrawler.crawl()
 
+
     val productId = "A1091"
-    val accessToken = "12c6db1a73dae0ebb70d45028f2a30eb"
+    val dotEnv = Dotenv.load()
+    val accessToken = dotEnv.get("THEBASE_ACCESS_TOKEN")
 
     val parser = Parser(productId)
     parser.parse()
