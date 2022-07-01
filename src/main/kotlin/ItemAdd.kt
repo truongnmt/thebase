@@ -9,10 +9,18 @@ import java.net.http.HttpResponse
 
 class ItemAdd {
     private var accessToken: String
+    private var refreshToken: String
+    private var clientId: String
+    private var clientSecret: String
+    private var redirectUri: String
 
     init {
         val dotEnv = Dotenv.load()
         accessToken = dotEnv.get("THEBASE_ACCESS_TOKEN")
+        refreshToken = dotEnv.get("THEBASE_REFRESH_TOKEN")
+        clientId = dotEnv.get("THEBASE_CLIENT_ID")
+        clientSecret = dotEnv.get("THEBASE_CLIENT_SECRET")
+        redirectUri = dotEnv.get("THEBASE_REDIRECT_URI")
     }
 
     fun publish(parser: Parser, category: Category) {
@@ -35,18 +43,27 @@ class ItemAdd {
             itemAddParams["variation_stock[${index}]"] = 888
         }
 
-        val itemAddUrlParams = itemAddParams.map{(k, v) -> "$k=$v" }.joinToString("&")
-        // println(itemAddUrlParams)
-        val client = HttpClient.newBuilder().build();
-        var request = HttpRequest.newBuilder()
-            .uri(URI.create("https://api.thebase.in/1/items/add?${itemAddUrlParams}"))
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .header("Authorization", "Bearer $accessToken")
-            .build()
-        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        println(response.body())
 
-        val docCtx = JsonPath.parse(response.body())
+        val itemAddUrlParams = itemAddParams.map{(k, v) -> "$k=$v" }.joinToString("&")
+        var itemAddResponse = postRequest("https://api.thebase.in/1/items/add", itemAddUrlParams, accessToken)
+        var docCtx = JsonPath.parse(itemAddResponse)
+
+        val errorDescription: String = docCtx.read("$.error_description")
+        if (errorDescription == "アクセストークンが無効です。") {
+            val requestParams = mapOf (
+                "grant_type" to "refresh_token",
+                "client_id" to clientId,
+                "refresh_token" to refreshToken,
+                "client_secret" to clientSecret,
+                "redirect_url" to redirectUri,
+            ).map{(k,v) -> "$k=$v"}.joinToString("&")
+            val refreshTokenResponse = postRequest("https://api.thebase.in/1/oauth/token", requestParams)
+            accessToken = JsonPath.parse(refreshTokenResponse).read("$.access_token")
+
+            itemAddResponse = postRequest("https://api.thebase.in/1/items/add", itemAddUrlParams, accessToken)
+            docCtx = JsonPath.parse(itemAddResponse)
+        }
+
         val itemId: Int = docCtx.read("$.item.item_id")
         println("item_id: $itemId")
 
@@ -55,17 +72,36 @@ class ItemAdd {
             "item_id" to itemId,
             "category_id" to category.reverseCategory[parser.productType]
         ).map{(k,v) -> "$k=$v"}.joinToString("&")
-        request = HttpRequest.newBuilder()
-            .uri(URI.create("https://api.thebase.in/1/item_categories/add?${requestParams}"))
+        postRequest("https://api.thebase.in/1/item_categories/add", requestParams, accessToken)
+    }
+
+    private fun postRequest(uri: String, requestParams: String, accessToken: String): String {
+        val client = HttpClient.newBuilder().build();
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create("${uri}?${requestParams}"))
             .POST(HttpRequest.BodyPublishers.noBody())
             .header("Authorization", "Bearer $accessToken")
             .build()
-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        val response = client.send(request, HttpResponse.BodyHandlers.ofString());
         println(response.body())
+
+        return response.body()
     }
 
-    fun productDetail(productId: String, productTitle: String,
-                      productVariants: ArrayList<String>): String {
+    private fun postRequest(uri: String, requestParams: String): String {
+        val client = HttpClient.newBuilder().build();
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create("${uri}?${requestParams}"))
+            .POST(HttpRequest.BodyPublishers.noBody())
+            .build()
+        val response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        println(response.body())
+
+        return response.body()
+    }
+
+    private fun productDetail(productId: String, productTitle: String,
+                              productVariants: ArrayList<String>): String {
         return "− − − − − − − − − − − − − − − − − − − − −\n" +
                 "＊ご購入いただく前にこちらをご確認ください。\n" +
                 "https://techtoy.thebase.in/blog/2021/04/16/001805\n" +
