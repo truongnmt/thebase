@@ -98,21 +98,19 @@ class AliexCrawler {
 //            println(line[3])
             val crawledPrice = crawPrice(line[3])
             if (crawledPrice == "") {
-                logFile.printWriter().use { out ->
-                    out.println("Cannot get price for product ${line!![0]}, productID ${line!![1]}, current price ${line!![2]}")
-                }
-
+                logFile.appendText(
+                    "Cannot get price for product ${line[0]}, productID ${line[1]}, current price ${line[2]}\n"
+                )
                 line = csvReader.readNext()
                 continue
             }
             val sellPrice = calculateSellPrice(crawledPrice.toInt())
             if (sellPrice != line[2]) {
-                logFile.printWriter().use { out ->
-                    out.println("Price not match for product ${line!![0]}, productID ${line!![1]}, " +
-                            "current price ${line!![2]}, crawled price $sellPrice")
-                }
+                logFile.appendText(
+                    "Price not match for product ${line[0]}, productID ${line[1]}, " +
+                            "current price ${line[2]}, crawled price $sellPrice\n"
+                )
             }
-
             line = csvReader.readNext()
         }
     }
