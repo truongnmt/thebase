@@ -43,3 +43,6 @@ bin/
 .DS_Store
 
 .env
+
+src/main/resources/product.csv
+src/main/resources/price_check_log
